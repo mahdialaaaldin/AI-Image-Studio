@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Generator Pro - Pollinations.ai</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --accent: #ec4899;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 80%, rgba(236, 72, 153, 0.3) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.3) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 40%, rgba(99, 102, 241, 0.2) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-left-color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .prompt-suggestion {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .prompt-suggestion:hover {
+            transform: translateX(5px);
+            color: var(--primary);
+        }
+
+        .image-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .image-container:hover .overlay-buttons {
+            opacity: 1;
+        }
+
+        .overlay-buttons {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .style-preset {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .style-preset::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(99, 102, 241, 0.3) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .style-preset:hover::before {
+            opacity: 1;
+        }
+
+        .style-preset.active {
+            border-color: var(--primary);
+            background-color: rgba(99, 102, 241, 0.1);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.5);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.7);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="glass-morphism p-8 rounded-2xl w-full max-w-4xl fade-in">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                AI Image Generator Pro
+            </h1>
+            <p class="text-gray-600">Powered by Pollinations.ai • Create stunning AI-generated artwork</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Left Column - Controls -->
+            <div class="space-y-6">
+                <!-- Prompt Input -->
+                <div>
+                    <label for="promptInput" class="block text-gray-700 text-sm font-semibold mb-2">
+                        Image Description
+                    </label>
+                    <div class="relative">
+                        <textarea
+                            id="promptInput"
+                            rows="4"
+                            class="w-full p-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none transition duration-200"
+                            placeholder="e.g., A vibrant fantasy forest with glowing mushrooms and ancient trees..."
+                        ></textarea>
+                        <button
+                            id="randomPromptBtn"
+                            class="absolute bottom-2 right-2 text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-lg hover:bg-purple-200 transition duration-200"
+                            title="Generate random prompt"
+                        >
+                            🎲 Random
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Style Presets -->
+                <div>
+                    <label class="block text-gray-700 text-sm font-semibold mb-2">
+                        Style Presets
+                    </label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button class="style-preset border-2 border-gray-200 rounded-lg p-2 text-sm hover:border-purple-400 transition" data-style="">
+                            Default
+                        </button>
+                        <button class="style-preset border-2 border-gray-200 rounded-lg p-2 text-sm hover:border-purple-400 transition" data-style="photorealistic, 8k, highly detailed">
+                            Realistic
+                        </button>
+                        <button class="style-preset border-2 border-gray-200 rounded-lg p-2 text-sm hover:border-purple-400 transition" data-style="digital art, artstation, concept art">
+                            Digital Art
+                        </button>
+                        <button class="style-preset border-2 border-gray-200 rounded-lg p-2 text-sm hover:border-purple-400 transition" data-style="oil painting, renaissance, classical">
+                            Oil Paint
+                        </button>
+                        <button class="style-preset border-2 border-gray-200 rounded-lg p-2 text-sm hover:border-purple-400 transition" data-style="anime style, manga">
+                            Anime
+                        </button>
+                        <button class="style-preset border-2 border-gray-200 rounded-lg p-2 text-sm hover:border-purple-400 transition" data-style="studio ghibli style, hayao miyazaki">
+                            Ghibli
+                        </button>
+                        <button class="style-preset border-2 border-gray-200 rounded-lg p-2 text-sm hover:border-purple-400 transition" data-style="3d render, pixar style">
+                            3D Render
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Advanced Options -->
+                <div class="space-y-4">
+                    <details class="group">
+                        <summary class="cursor-pointer text-gray-700 text-sm font-semibold mb-2 hover:text-purple-600 transition">
+                            Advanced Options ▶
+                        </summary>
+                        <div class="mt-4 space-y-4 pl-4">
+                            <!-- Aspect Ratio -->
+                            <div>
+                                <label class="block text-gray-600 text-sm mb-1">Aspect Ratio</label>
+                                <select id="aspectRatio" class="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                    <option value="">Default (1:1)</option>
+                                    <option value="&width=1920&height=1080">16:9 (Landscape)</option>
+                                    <option value="&width=1080&height=1920">9:16 (Portrait)</option>
+                                    <option value="&width=1920&height=1280">3:2</option>
+                                    <option value="&width=1280&height=1920">2:3</option>
+                                </select>
+                            </div>
+
+                            <!-- Seed -->
+                            <div>
+                                <label class="block text-gray-600 text-sm mb-1">Seed (optional)</label>
+                                <input
+                                    type="number"
+                                    id="seedInput"
+                                    class="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                    placeholder="Random seed for reproducible results"
+                                >
+                                <p class="text-xs text-gray-500 mt-1">💡 Tip: Leave empty to get different results each time with the same prompt</p>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+
+                <!-- Generate Button -->
+                <button
+                    id="generateButton"
+                    class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 px-6 rounded-xl font-semibold hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition duration-200 ease-in-out flex items-center justify-center transform hover:scale-105"
+                >
+                    <span id="buttonText">Generate Image</span>
+                    <div id="loadingSpinner" class="spinner ml-2 hidden"></div>
+                </button>
+
+                <!-- Error Message -->
+                <div id="errorMessage" class="text-red-600 text-sm hidden bg-red-50 p-3 rounded-lg"></div>
+
+                <!-- Inspiration -->
+                <div class="mt-6">
+                    <p class="text-gray-700 text-sm font-semibold mb-2">Need inspiration?</p>
+                    <div class="space-y-2 text-sm">
+                        <p class="prompt-suggestion text-gray-600">🌅 "Sunset over a cyberpunk city with neon lights"</p>
+                        <p class="prompt-suggestion text-gray-600">🐉 "Majestic dragon in a crystal cave"</p>
+                        <p class="prompt-suggestion text-gray-600">🌸 "Cherry blossoms in a zen garden at dawn"</p>
+                        <p class="prompt-suggestion text-gray-600">🚀 "Retro-futuristic space station orbiting Saturn"</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Image Display -->
+            <div>
+                <div id="imageDisplay" class="image-container bg-gray-50 rounded-xl flex items-center justify-center min-h-[400px] relative">
+                    <p id="imagePlaceholder" class="text-gray-500 text-center p-8">
+                        Your AI-generated masterpiece will appear here ✨
+                    </p>
+                    <img id="generatedImage" src="" alt="Generated Image" class="max-w-full h-auto rounded-xl hidden">
+                    
+                    <!-- Overlay buttons -->
+                    <div class="overlay-buttons hidden" id="imageActions">
+                        <button
+                            id="downloadBtn"
+                            class="bg-white/90 backdrop-blur-sm p-2 rounded-lg shadow-lg hover:bg-white transition"
+                            title="Download image"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                        </button>
+                        <button
+                            id="copyPromptBtn"
+                            class="bg-white/90 backdrop-blur-sm p-2 rounded-lg shadow-lg hover:bg-white transition"
+                            title="Copy prompt"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Image Info -->
+                <div id="imageInfo" class="mt-4 text-sm text-gray-600 hidden">
+                    <p id="promptUsed" class="mb-1"></p>
+                    <p id="generationTime" class="text-xs"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div id="historySection" class="mt-8 hidden">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-lg font-semibold text-gray-700">Recent Generations</h3>
+                <button id="clearHistoryBtn" class="text-sm text-gray-500 hover:text-red-600 transition">Clear History</button>
+            </div>
+            <div id="historyGrid" class="grid grid-cols-4 md:grid-cols-6 gap-2"></div>
+        </div>
+    </div>
+
+    <script>
+        // Elements
+        const promptInput = document.getElementById('promptInput');
+        const generateButton = document.getElementById('generateButton');
+        const buttonText = document.getElementById('buttonText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const errorMessage = document.getElementById('errorMessage');
+        const imageDisplay = document.getElementById('imageDisplay');
+        const imagePlaceholder = document.getElementById('imagePlaceholder');
+        const generatedImage = document.getElementById('generatedImage');
+        const randomPromptBtn = document.getElementById('randomPromptBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const copyPromptBtn = document.getElementById('copyPromptBtn');
+        const imageActions = document.getElementById('imageActions');
+        const aspectRatio = document.getElementById('aspectRatio');
+        const seedInput = document.getElementById('seedInput');
+        const imageInfo = document.getElementById('imageInfo');
+        const promptUsed = document.getElementById('promptUsed');
+        const generationTime = document.getElementById('generationTime');
+        const historySection = document.getElementById('historySection');
+        const historyGrid = document.getElementById('historyGrid');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+        // State
+        let currentPrompt = '';
+        let selectedStyle = '';
+        let generationHistory = [];
+        let lastGeneratedPrompt = '';
+        let isGeneratingRandomPrompt = false;
+
+        // Static prompts as fallback
+        const staticPrompts =  [
+            "A ethereal forest with bioluminescent plants and floating islands in the sky",
+            "Steampunk airship flying through clouds at sunset with brass gears and copper pipes",
+            "Underwater city with glass domes and colorful coral architecture",
+            "Northern lights dancing over a frozen crystal landscape with ice sculptures",
+            "Ancient library with floating books and magical glowing orbs",
+            "Cyberpunk street market in Tokyo with holographic advertisements",
+            "Dragon made of stardust soaring through a nebula",
+            "Enchanted garden with oversized flowers and tiny fairy houses",
+            "Post-apocalyptic nature reclaiming a abandoned city with vines and trees",
+            "Crystal cave with rainbow reflections and underground waterfall",
+            "Mechanical butterfly in a clockwork garden with brass flowers",
+            "Aurora borealis reflected in a mirror-like lake surrounded by mountains",
+            "Floating tea party in the clouds with vintage furniture",
+            "Neon-lit arcade in a retro-futuristic style with pixel art decorations",
+            "Magical potion shop with glowing bottles and mystical ingredients",
+            "Space whale swimming through asteroid field with cosmic patterns",
+            "Victorian greenhouse filled with exotic alien plants",
+            "Quantum realm with fractal patterns and impossible geometry",
+            "Sunset through a prism creating rainbow light beams in a dark room",
+            "Time traveler's workshop with clocks from different eras"
+        ];
+        
+
+        // Initialize
+        loadHistory();
+
+        // Clear history
+        clearHistoryBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear all generation history?')) {
+                generationHistory = [];
+                saveHistory();
+                renderHistory();
+                showNotification('History cleared! 🗑️');
+            }
+        });
+
+        // Style preset handling
+        document.querySelectorAll('.style-preset').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('.style-preset').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                selectedStyle = this.dataset.style;
+            });
+        });
+
+        // Prompt suggestions
+        document.querySelectorAll('.prompt-suggestion').forEach(suggestion => {
+            suggestion.addEventListener('click', function() {
+                promptInput.value = this.textContent.substring(2).trim();
+                promptInput.focus();
+            });
+        });
+
+        // Random prompt generator with Pollinations.ai API
+        randomPromptBtn.addEventListener('click', async () => {
+            if (isGeneratingRandomPrompt) return;
+            
+            isGeneratingRandomPrompt = true;
+            const originalText = randomPromptBtn.innerHTML;
+            randomPromptBtn.innerHTML = '⏳ Loading...';
+            randomPromptBtn.disabled = true;
+            
+            const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+			try {
+
+				const timestamp = Date.now();
+				const promptRequest = `Describe a unique and creative image. Only output the description. Do not include any extra text.`;
+
+				
+				// Create URL with cache-busting parameter
+				const apiUrl = `https://text.pollinations.ai/${encodeURIComponent(promptRequest)}?t=${timestamp}`;
+			  
+				 const response = await fetch(apiUrl, {
+					method: 'GET',
+					signal: controller.signal
+				});
+
+				clearTimeout(timeoutId); // Stop the timer on success
+
+				if (response.ok) {
+                    const aiPrompt = await response.text();
+                    // Clean up the response
+                    const cleanPrompt = aiPrompt.trim().replace(/^["']|["']$/g, '').replace(/\n/g, ' ').trim();
+                    if (cleanPrompt && cleanPrompt.length > 10 ){//&& cleanPrompt.length < 500) {
+                        promptInput.value = cleanPrompt;
+                    } else {
+                        throw new Error('Invalid prompt received');
+                    }
+                } else {
+                    throw new Error('API request failed');
+                }
+            } catch (error) {
+                console.log('Falling back to static prompts:', error.message);
+                // Fallback to static prompts
+                const randomIndex = Math.floor(Math.random() * staticPrompts.length);
+                promptInput.value = staticPrompts[randomIndex];
+            } finally {
+                randomPromptBtn.innerHTML = originalText;
+                randomPromptBtn.disabled = false;
+                isGeneratingRandomPrompt = false;
+                promptInput.focus();
+                
+                // Add animation
+                randomPromptBtn.classList.add('pulse');
+                setTimeout(() => randomPromptBtn.classList.remove('pulse'), 1000);
+            }
+        });
+
+        // Generate image
+        async function generateImage() {
+            const prompt = promptInput.value.trim();
+            if (!prompt) {
+                showError('Please enter a description for the image.');
+                return;
+            }
+
+            showLoading(true);
+            errorMessage.classList.add('hidden');
+
+            try {
+                // Combine prompt with style
+                let fullPrompt = prompt;
+                if (selectedStyle) {
+                    fullPrompt += `, ${selectedStyle}`;
+                }
+                
+                // Check if generating same prompt - if so, use random seed
+                let seedToUse = seedInput.value;
+                if (fullPrompt === lastGeneratedPrompt && !seedToUse) {
+                    // Generate random seed for variety
+                    seedToUse = Math.floor(Math.random() * 1000000);
+                    console.log('Same prompt detected, using random seed:', seedToUse);
+                    // Show temporary notification
+                    showNotification('Using random seed for variety! 🎲');
+                }
+                
+                currentPrompt = fullPrompt;
+                lastGeneratedPrompt = fullPrompt;
+                const startTime = Date.now();
+
+                // Encode the prompt
+                const encodedPrompt = encodeURIComponent(fullPrompt);
+                
+                // Build URL with options
+                let imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?nologo=true`;
+                
+                // Add aspect ratio if selected
+                if (aspectRatio.value) {
+                    imageUrl += aspectRatio.value;
+                }
+                
+                // Add seed if provided or generated
+                if (seedToUse) {
+                    imageUrl += `&seed=${seedToUse}`;
+                }
+
+                // Create a new image element to handle loading
+                const img = new Image();
+                img.onload = () => {
+                    generatedImage.src = img.src;
+                    generatedImage.classList.remove('hidden');
+                    imagePlaceholder.classList.add('hidden');
+                    imageActions.classList.remove('hidden');
+                    
+                    // Show image info
+                    const endTime = Date.now();
+                    const duration = ((endTime - startTime) / 1000).toFixed(1);
+                    promptUsed.textContent = `Prompt: "${prompt}"`;
+                    generationTime.textContent = `Generated in ${duration}s`;
+                    imageInfo.classList.remove('hidden');
+                    
+                    // Add to history
+                    addToHistory(img.src, prompt);
+                    
+                    showLoading(false);
+                };
+
+                img.onerror = () => {
+                    showError('Failed to generate image. Please try a different prompt or check your connection.');
+                    showLoading(false);
+                };
+
+                img.src = imageUrl;
+
+            } catch (error) {
+                console.error('Error:', error);
+                showError(`An unexpected error occurred: ${error.message}`);
+                showLoading(false);
+            }
+        }
+
+        // Event listeners
+        generateButton.addEventListener('click', generateImage);
+        
+        // Generate on Enter key
+        promptInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                generateImage();
+            }
+        });
+
+        // Download functionality
+        downloadBtn.addEventListener('click', async () => {
+            if (!generatedImage.src) return;
+            
+            try {
+                // Fetch the image
+                const response = await fetch(generatedImage.src);
+                const blob = await response.blob();
+                
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ai-generated-${Date.now()}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                // Visual feedback
+                downloadBtn.classList.add('scale-95');
+                setTimeout(() => downloadBtn.classList.remove('scale-95'), 200);
+            } catch (error) {
+                console.error('Download error:', error);
+                showError('Failed to download image. Please try again.');
+            }
+        });
+
+        // Copy prompt functionality
+        copyPromptBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(currentPrompt);
+                
+                // Visual feedback
+                const originalHTML = copyPromptBtn.innerHTML;
+                copyPromptBtn.innerHTML = '<svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+                setTimeout(() => {
+                    copyPromptBtn.innerHTML = originalHTML;
+                }, 1500);
+            } catch (error) {
+                console.error('Copy error:', error);
+                showError('Failed to copy prompt.');
+            }
+        });
+
+        // Helper functions
+        function showLoading(isLoading) {
+            if (isLoading) {
+                buttonText.textContent = 'Creating magic...';
+                loadingSpinner.classList.remove('hidden');
+                generateButton.disabled = true;
+                generateButton.classList.add('opacity-75');
+            } else {
+                buttonText.textContent = 'Generate Image';
+                loadingSpinner.classList.add('hidden');
+                generateButton.disabled = false;
+                generateButton.classList.remove('opacity-75');
+            }
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.remove('hidden');
+            setTimeout(() => {
+                errorMessage.classList.add('hidden');
+            }, 5000);
+        }
+
+        function showNotification(message) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-purple-600 text-white px-4 py-2 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 10);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        function addToHistory(imageSrc, prompt) {
+            generationHistory.unshift({ src: imageSrc, prompt: prompt, timestamp: Date.now() });
+            
+            // Keep only last 12 images
+            if (generationHistory.length > 12) {
+                generationHistory = generationHistory.slice(0, 12);
+            }
+            
+            saveHistory();
+            renderHistory();
+        }
+
+        function renderHistory() {
+            if (generationHistory.length === 0) {
+                historySection.classList.add('hidden');
+                return;
+            }
+            
+            historySection.classList.remove('hidden');
+            historyGrid.innerHTML = '';
+            
+            generationHistory.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'relative group cursor-pointer';
+                div.innerHTML = `
+                    <img src="${item.src}" alt="${item.prompt}" class="w-full h-20 object-cover rounded-lg hover:opacity-75 transition">
+                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition rounded-lg flex items-center justify-center">
+                        <button class="opacity-0 group-hover:opacity-100 transition text-white text-xs">View</button>
+                    </div>
+                `;
+                
+                div.addEventListener('click', () => {
+                    generatedImage.src = item.src;
+                    generatedImage.classList.remove('hidden');
+                    imagePlaceholder.classList.add('hidden');
+                    imageActions.classList.remove('hidden');
+                    promptInput.value = item.prompt;
+                    currentPrompt = item.prompt;
+                    promptUsed.textContent = `Prompt: "${item.prompt}"`;
+                    imageInfo.classList.remove('hidden');
+                });
+                
+                historyGrid.appendChild(div);
+            });
+        }
+
+        function saveHistory() {
+            try {
+                localStorage.setItem('aiImageHistory', JSON.stringify(generationHistory));
+            } catch (e) {
+                console.error('Failed to save history:', e);
+            }
+        }
+
+        function loadHistory() {
+            try {
+                const saved = localStorage.getItem('aiImageHistory');
+                if (saved) {
+                    generationHistory = JSON.parse(saved);
+                    renderHistory();
+                }
+            } catch (e) {
+                console.error('Failed to load history:', e);
+            }
+        }
+    </script>
+</body>
+</html>
