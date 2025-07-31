@@ -7,7 +7,7 @@ A modern, feature-rich AI image generator powered by Pollinations.ai. Create stu
 
 ## 🌟 Live Demo
 
-[**Try it live here →**](https://mahdialaaaldin.github.io/ai-image-studio/)
+[**Try it live here →**](https://mahdialaaaldin.github.io/AI-Image-Studio/)
 
 ## ✨ Features
 
@@ -40,13 +40,13 @@ A modern, feature-rich AI image generator powered by Pollinations.ai. Create stu
 ## 🚀 Getting Started
 
 ### Option 1: Direct Use
-Simply visit the [live demo](https://mahdialaaaldin.github.io/ai-image-studio/) and start generating!
+Simply visit the [live demo](https://mahdialaaaldin.github.io/AI-Image-Studio/) and start generating!
 
 ### Option 2: Local Development
 1. Clone the repository:
 ```bash
-git clone https://github.com/mahdialaaaldin/ai-image-studio.git
-cd ai-image-studio
+git clone https://github.com/mahdialaaaldin/AI-Image-Studio.git
+cd AI-Image-Studio
 ```
 
 2. Open `index.html` in your browser
@@ -86,7 +86,7 @@ cd ai-image-studio
 
 ## 📂 Project Structure
 ```
-ai-image-studio/
+AI-Image-Studio/
 ├── index.html          # Main application file
 ├── README.md          # Documentation
 └── LICENSE           # MIT License
