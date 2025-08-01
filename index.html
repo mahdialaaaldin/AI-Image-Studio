@@ -430,8 +430,7 @@
 			try {
 
 				const timestamp = Date.now();
-				const promptRequest = `Describe a unique and creative image. Only output the description. Do not include any extra text.`;
-
+				const promptRequest = `Generate an image description in one sentence. Do not include any extra text.`;
 				
 				// Create URL with cache-busting parameter
 				const apiUrl = `https://text.pollinations.ai/${encodeURIComponent(promptRequest)}?t=${timestamp}`;
